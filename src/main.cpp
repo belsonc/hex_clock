@@ -5,6 +5,10 @@
 #include <ESP32_4848S040.h>
 #include <lvgl.h>
 #include "touch.h"
+#include <WiFi.h>
+
+const char* ssid = "FakeSSID";         
+const char* password = "FakePassword"; 
 
 // Display backlight pin
 #define GFX_BL 38
@@ -52,6 +56,21 @@ questions -
 
 void setup()
 {
+    Serial.begin(115200);
+    delay(1000); // Give the serial monitor time to connect
+
+    Serial.println("\nConnecting to Wi-Fi...");
+    WiFi.begin(ssid, password);
+
+    // Wait until connected
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+
+    Serial.println("\nWi-Fi Connected!");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
 }
 
 void loop()
