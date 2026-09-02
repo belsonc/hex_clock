@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "hex_clock",
+			"path": "hex_clock"
+		}
+	],
+	"settings": {}
+}
