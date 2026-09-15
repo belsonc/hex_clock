@@ -23,6 +23,9 @@ int hour, minute, second;
 int hour_color, minute_color, second_color;
 String hour_str, minute_str, second_str, time_str;
 lv_color_t text_color = lv_color_hex(0x810226);
+struct tm timeinfo, previous_time;
+int current_millis, previous_millis;
+lv_obj_t *label;
 
 // Display backlight pin
 #define GFX_BL 38
@@ -88,6 +91,29 @@ void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 static uint32_t my_tick(void)
 {
   return millis();
+}
+
+struct tm time_update()
+{
+/*    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo))
+    {
+        Serial.println("Failed to obtain time");
+        return timeinfo; // Return an empty struct
+    }
+*/
+    struct tm timeinfo = {};
+    do {
+        if (!getLocalTime(&timeinfo)) {
+            Serial.println("Failed to obtain time");
+            delay(1000); // Wait for a second before retrying
+        }
+        else {
+            Serial.println("Time obtained successfully!");
+            break;
+        }
+    } while (1); // Continue until we have a valid time
+    return timeinfo;
 }
 
 void setup()
@@ -168,12 +194,107 @@ void setup()
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     Serial.println("NTP Initialized!");
     struct tm timeinfo;
-    if(!getLocalTime(&timeinfo))
+    timeinfo = time_update();
+    Serial.println(&timeinfo);
+/*    if(!getLocalTime(&timeinfo))
     {
         Serial.println("Failed to obtain time");
         return;
     }
-    Serial.println("Time obtained successfully!");
+*/
+//    Serial.println("Time obtained successfully!");
+    hour = timeinfo.tm_hour;
+    minute = timeinfo.tm_min;
+    second = timeinfo.tm_sec;
+
+    hour_color = hour * 256 / 24; // Scale hour to 0-255
+    minute_color = minute * 256 / 60; // Scale minute to 0-255
+    second_color = second * 256 / 60; // Scale second to 0-255
+    Serial.println("Got RGB");
+    lv_color_t bg_color = lv_color_make(hour_color, minute_color, second_color);
+    lv_obj_set_style_bg_color(lv_screen_active(), bg_color, LV_PART_MAIN);
+
+    label = lv_label_create(lv_screen_active());
+
+    if (hour < 10)
+        hour_str = "0" + String(hour);
+    else
+        hour_str = String(hour);
+
+    if (minute < 10)
+        minute_str = "0" + String(minute);
+    else
+        minute_str = String(minute);
+
+    if (second < 10)
+        second_str = "0" + String(second);
+    else
+        second_str = String(second);
+
+    time_str = hour_str + ":" + minute_str + ":" + second_str;
+
+    lv_label_set_text(label, time_str.c_str());
+    lv_obj_set_style_text_color(label, text_color, LV_PART_MAIN);
+    lv_obj_set_style_text_font(label, &lv_font_montserrat_48, LV_PART_MAIN);
+    lv_obj_align(label, LV_ALIGN_CENTER, 120, 140);
+
+    previous_millis=millis();
+
+
+    Serial.println("Background color set based on time!");
+    Serial.println("RGB Calculated Successfully");
+}
+
+void loop()
+{
+    lv_timer_handler();
+    delay(5);
+//    delay(60000);
+
+//    struct tm timeinfo;
+//    timeinfo = time_update();
+    current_millis=millis();
+    if (current_millis - previous_millis >= 60000) { // Check if a minute has passed
+        timeinfo = time_update();
+        hour = timeinfo.tm_hour;
+        minute = timeinfo.tm_min;
+        second = timeinfo.tm_sec;
+
+        hour_color = hour * 256 / 24; // Scale hour to 0-255
+        minute_color = minute * 256 / 60; // Scale minute to 0-255
+        second_color = second * 256 / 60; // Scale second to 0-255
+        Serial.println("Got RGB");
+        lv_color_t bg_color = lv_color_make(hour_color, minute_color, second_color);
+        lv_obj_set_style_bg_color(lv_screen_active(), bg_color, LV_PART_MAIN);
+
+//        label = lv_label_create(lv_screen_active());
+
+        if (hour < 10)
+            hour_str = "0" + String(hour);
+        else
+            hour_str = String(hour);
+
+        if (minute < 10)
+            minute_str = "0" + String(minute);
+        else
+            minute_str = String(minute);
+
+        if (second < 10)
+            second_str = "0" + String(second);
+        else
+            second_str = String(second);
+
+        time_str = hour_str + ":" + minute_str + ":" + second_str;
+
+        lv_label_set_text(label, time_str.c_str());
+        lv_obj_set_style_text_color(label, text_color, LV_PART_MAIN);
+        lv_obj_set_style_text_font(label, &lv_font_montserrat_48, LV_PART_MAIN);
+        lv_obj_align(label, LV_ALIGN_CENTER, 120, 140);
+        previous_time = timeinfo;
+        previous_millis = current_millis;
+        
+    }
+/*    timeinfo = time_update();
     hour = timeinfo.tm_hour;
     minute = timeinfo.tm_min;
     second = timeinfo.tm_sec;
@@ -206,16 +327,13 @@ void setup()
 
     lv_label_set_text(label, time_str.c_str());
     lv_obj_set_style_text_color(label, text_color, LV_PART_MAIN);
-    lv_obj_set_style_text_font(label, &lv_font_montserrat_24, LV_PART_MAIN);
-    lv_obj_align(label, LV_ALIGN_CENTER, 90, 90);
-
-
-    Serial.println("Background color set based on time!");
-    Serial.println("RGB Calculated Successfully");
+    lv_obj_set_style_text_font(label, &lv_font_montserrat_48, LV_PART_MAIN);
+    lv_obj_align(label, LV_ALIGN_CENTER, 120, 140);
+*/
 }
 
-void loop()
-{
-    lv_timer_handler();
-    delay(5);
-}
+/*list of functions
+- connecting to the wifi/hotspot
+- time retrieval
+- color setting
+- */
