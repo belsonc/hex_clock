@@ -8,11 +8,16 @@
 #include <WiFi.h>
 #include <time.h>
 #include <lv_conf.h>
+#include "secrets.h"
+
+
+bool wifi_success = false;
 
 //wifi connection info
-const char* ssid = "Fake ssid";         
-const char* password = "fake password"; 
-
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD; 
+const char* hotspot_ssid = HOTSPOT_SSID;
+const char* hotspot_password = HOTSPOT_PASSWORD; //ssids and passwords come from secrets.h 
 
 // NTP Server Settings
 const char* ntpServer = "pool.ntp.org";
@@ -178,12 +183,25 @@ void setup()
 
 
     Serial.println("\nConnecting to Wi-Fi...");
-    WiFi.begin(ssid, password);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-    // Wait until connected
+    unsigned long start_time = millis();
+
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
+
+        if (millis() - start_time >= 10000) {
+            break;
+        }
+    }
+
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("\nWi-Fi failed. Trying hotspot...");
+
+        WiFi.begin(HOTSPOT_SSID, HOTSPOT_PASSWORD);
+
+        // wait for hotspot...
     }
 
     Serial.println("\nWi-Fi Connected!");
